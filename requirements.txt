@@ -1,2 +1,2 @@
 scratchattach
-google-generative-ai
+google-generativeai
