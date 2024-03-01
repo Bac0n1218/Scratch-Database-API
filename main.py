@@ -88,11 +88,10 @@ prompt_parts = [
     "output: I am Diamond-12, an AI language model made by Bacon1218. I was trained by Bacon1218 to help people with tasks.",
 ]
 
-while True:
-    prompt_parts[-1] = f"input: {Encoding.decode(value)}"
-    response = model.generate_content(prompt_parts)
-    print(response.text)
-    try:
-        conn.set_var("Reply", Encoding.encode(response.text))
+prompt_parts[-1] = f"input: {Encoding.decode(value)}"
+response = model.generate_content(prompt_parts)
+print(response.text)
+try:
+    conn.set_var("Reply", Encoding.encode(response.text))
     except scratchattach.exceptions.InvalidCloudValue:
         print("Error: InvalidCloudValue exception handled.")
