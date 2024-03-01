@@ -5,11 +5,8 @@ import scratchattach as scratch3
 session = scratch3.Session(
     ".eJxVj8FOwzAQRP8lZwix13ac3hrUQw8FCSQkeok29joxbewqSUGA-HccKZde583OzP5m14nGgANlm6xGEwPjTGd32RxPFJJWMQIN1nLgJNBCVaAuhSJQUhiOevN4jM-f3balt-O3Gs2-ZtMeDjv1OpgUc46dD_f-kpJA54zLnBVFLiGhBq9z3yz1jbeJJyArqUEkZj8wdLGZ_UA_MSzbtgON3uDDE30173E83Qb0OPXJJIXjUAChqFpwpTEFGMddyZwotQapecuUAnt73KJJvy4TFo3CnHpmH0O-gil_oct5FevV_PcPTgFi_w:1rajN1:DOYoCV58SDa-iv43l6quvGlL4jc",
     username="Bacon1218")  #The username field is case sensitive
+
 conn = session.connect_cloud("966886339")
-value = scratch3.get_var("966886339", "Test Var")
-print(value)
-
-
 
 letters = [
     None, None, None, None, None, None, None, None, None, None, "1", "2", "3",
@@ -25,8 +22,9 @@ letters = [
 class Encoding:
   """
     Class that contains tools for encoding / decoding strings. The strings encoded / decoded with these functions can be decoded / encoded with Scratch using this sprite: https://scratch3-assets.1tim.repl.co/Encoder.sprite3
-    """
+  """
 
+  @staticmethod
   def decode(inp):
     """
         Args:
@@ -41,10 +39,22 @@ class Encoding:
       print(f"Error: {e}")
     outp = ""
     for i in range(0, math.floor(len(inp) / 2)):
-      letter = letters[int(f"{inp[i*2]}{inp[(i*2)+1]}")]
-      outp = f"{outp}{letter}"
+      if i*2 + 1 < len(inp):
+        pair = f"{inp[i*2]}{inp[(i*2)+1]}"
+        if pair.isdigit():
+          index = int(pair)
+          if 0 <= index < len(letters):
+            letter = letters[index]
+            outp = f"{outp}{letter}"
+          else:
+            outp = f"{outp} [INVALID INDEX]"
+        else:
+          outp = f"{outp} [INVALID CHARACTER PAIR]"
+      else:
+        outp = f"{outp} [INVALID LENGTH]"
     return outp
 
+  @staticmethod
   def encode(inp):
     """
         Args:
@@ -64,7 +74,7 @@ class Encoding:
     return outp
 
 
-#AI Program
+# AI Program
 
 genai.configure(api_key="AIzaSyDpbiu8fi48-SosxoftE4Xn7QWso_nVdC0")
 
@@ -99,22 +109,23 @@ model = genai.GenerativeModel(model_name="gemini-1.0-pro",
                               generation_config=generation_config,
                               safety_settings=safety_settings)
 
-prompt_parts = [
-    "You are Diamond-12, that is your name. You were made to help people with tasks. You were made, coded, trained, and designed by Bacon1218, he is your owner. You are a helpful AI language model. You will answer the user with a reply that makes sense, and fits the context.",
-    "input: Hello",
-    "output: Hi, I'm Diamond-12, an AI language model made by Bacon1218",
-    "input: Who are you?",
-    "output: I am Diamond-12, a helpful AI made by Bacon1218.",
-    "input: who made you",
-    "output: Bacon1218 made me.",
-    "input: who trained you?",
-    "output: Bacon1218 trained me.",
-    "input: who are you?",
-    "output: I am Diamond-12, an AI language model made by Bacon1218. I was trained by Bacon1218 to help people with tasks.",
-    f"input: ",
-    "output: ",
-]
+while True:
+  prompt_parts = [
+      "You are Diamond-12, that is your name. You were made to help people with tasks. You were made, coded, trained, and designed by Bacon1218, he is your owner. You are a helpful AI language model. You will answer the user with a reply that makes sense, and fits the context.",
+      "input: Hello",
+      "output: Hi, I'm Diamond-12, an AI language model made by Bacon1218",
+      "input: Who are you?",
+      "output: I am Diamond-12, a helpful AI made by Bacon1218.",
+      "input: who made you",
+      "output: Bacon1218 made me.",
+      "input: who trained you?",
+      "output: Bacon1218 trained me.",
+      "input: who are you?",
+      "output: I am Diamond-12, an AI language model made by Bacon1218. I was trained by Bacon1218 to help people with tasks.",
+      f"input: ",
+      "output: ",
+  ]
 
-response = model.generate_content(prompt_parts)
-print(response.text)
-conn.set_var("Reply", Encoding.encode(response.text))
+  response = model.generate_content(prompt_parts)
+  print(response.text)
+  conn.set_var("Reply", Encoding.encode(response.text))
