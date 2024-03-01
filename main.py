@@ -5,6 +5,7 @@ import scratchattach as scratch3
 session = scratch3.Session(
     ".eJxVj8FOwzAQRP8lZwix13ac3hrUQw8FCSQkeok29joxbewqSUGA-HccKZde583OzP5m14nGgANlm6xGEwPjTGd32RxPFJJWMQIN1nLgJNBCVaAuhSJQUhiOevN4jM-f3balt-O3Gs2-ZtMeDjv1OpgUc46dD_f-kpJA54zLnBVFLiGhBq9z3yz1jbeJJyArqUEkZj8wdLGZ_UA_MSzbtgON3uDDE30173E83Qb0OPXJJIXjUAChqFpwpTEFGMddyZwotQapecuUAnt73KJJvy4TFo3CnHpmH0O-gil_oct5FevV_PcPTgFi_w:1rajN1:DOYoCV58SDa-iv43l6quvGlL4jc",
     username="Bacon1218")  #The username field is case sensitive
+
 conn = session.connect_cloud("966886339")
 value = scratch3.get_var("966886339", "Test Var")
 print(value)
@@ -115,11 +116,7 @@ prompt_parts = [
 
 
 while True:
-  new_value = scratch3.get_var("966886339", "Test Var")
-  if new_value != value:
-      value = new_value
-      prompt_parts[-1] = f"input: {Encoding.decode(value)}"
-
-      response = model.generate_content(prompt_parts)
-      print(response.text)
-      conn.set_var("Reply", Encoding.encode(response.text))
+  prompt_parts[-1] = f"input: {Encoding.decode(value)}"
+  response = model.generate_content(prompt_parts)
+  print(response.text)
+  conn.set_var("Reply", Encoding.encode(response.text))
