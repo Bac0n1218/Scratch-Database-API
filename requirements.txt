@@ -1,6 +1,5 @@
 scratchattach
 google-generativeai
 flask
-os
 math
 threading
