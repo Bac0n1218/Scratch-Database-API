@@ -1,13 +1,20 @@
-import google.generativeai as genai
-import math
 import scratchattach as scratch3
+import math
+from replit.ai.modelfarm import ChatExample, ChatMessage, ChatModel, ChatSession
+import keep_alive
+from threading import Thread
+import google.generativeai as genai
 
+#session and connection setup
 session = scratch3.Session(
     ".eJxVj8FOwzAQRP8lZwix13ac3hrUQw8FCSQkeok29joxbewqSUGA-HccKZde583OzP5m14nGgANlm6xGEwPjTGd32RxPFJJWMQIN1nLgJNBCVaAuhSJQUhiOevN4jM-f3balt-O3Gs2-ZtMeDjv1OpgUc46dD_f-kpJA54zLnBVFLiGhBq9z3yz1jbeJJyArqUEkZj8wdLGZ_UA_MSzbtgON3uDDE30173E83Qb0OPXJJIXjUAChqFpwpTEFGMddyZwotQapecuUAnt73KJJvy4TFo3CnHpmH0O-gil_oct5FevV_PcPTgFi_w:1rajN1:DOYoCV58SDa-iv43l6quvGlL4jc",
-    username="Bacon1218")  #The username field is case sensitive
+    username="Bacon1218")
+conn = session.connect_cloud("975475628")
+client = scratch3.CloudRequests(conn)
 
-conn = session.connect_cloud("966886339")
+history = []
 
+# letters encoding array
 letters = [
     None, None, None, None, None, None, None, None, None, None, "1", "2", "3",
     "4", "5", "6", "7", "8", "9", "0", " ", "a", "A", "b", "B", "c", "C", "d",
@@ -18,114 +25,116 @@ letters = [
     "?", "new line", "@", "#", "~", ";", ":", "+", "&", "|", "^", "'"
 ]
 
-
+# Encoding class definition
 class Encoding:
-  """
-    Class that contains tools for encoding / decoding strings. The strings encoded / decoded with these functions can be decoded / encoded with Scratch using this sprite: https://scratch3-assets.1tim.repl.co/Encoder.sprite3
-  """
-
-  @staticmethod
-  def decode(inp):
-    """
-        Args:
-            inp (str): The encoded input.
-
-        Returns:
-            str: The decoded output.
-        """
-    try:
-      inp = str(inp)
-    except Exception as e:
-      print(f"Error: {e}")
-    outp = ""
-    for i in range(0, math.floor(len(inp) / 2)):
-      if i*2 + 1 < len(inp):
-        pair = f"{inp[i*2]}{inp[(i*2)+1]}"
-        if pair.isdigit():
-          index = int(pair)
-          if 0 <= index < len(letters):
+    @staticmethod
+    def decode(inp):
+        try:
+            inp = str(inp)
+        except Exception:
+            raise ValueError("Invalid Decode Input")  # Simpler exception for clarity
+        outp = ""
+        for i in range(0, math.floor(len(inp) / 2)):
+            index = int(f"{inp[i*2]}{inp[(i*2)+1]}")
             letter = letters[index]
-            outp = f"{outp}{letter}"
-          else:
-            outp = f"{outp} [INVALID INDEX]"
-        else:
-          outp = f"{outp} [INVALID CHARACTER PAIR]"
-      else:
-        outp = f"{outp} [INVALID LENGTH]"
-    return outp
+            outp += letter
+        return outp
 
-  @staticmethod
-  def encode(inp):
+    @staticmethod
+    def encode(inp):
+        inp = str(inp)
+        outp = ""
+        for i in inp:
+            if i in letters:
+                outp += f"{letters.index(i):02d}"
+            else:
+                outp += "20"  # Space if the character isn't found
+        return outp
+
+    @staticmethod
+    def replace_char(old_char, new_char):
+        global letters
+        i = letters.index(old_char)
+        letters[i] = new_char
+
+
+
+
+
+@client.request
+def userInput(argument1):
+    print("Request received!")
+    print("Decoding...")
+    uInput = Encoding.decode(argument1)
+    print("Decoded!")
+    print(f"Asking AI: {uInput}")
     """
-        Args:
-            inp (str): The decoded input.
+    At the command line, only need to run once to install the package via pip:
 
-        Returns:
-            str: The encoded output.
-        """
-    inp = str(inp)
-    global encode_letters
-    outp = ""
-    for i in inp:
-      if i in letters:
-        outp = f"{outp}{letters.index(i)}"
-      else:
-        outp += str(letters.index(" "))
-    return outp
+    $ pip install google-generativeai
+    """
 
+    genai.configure(api_key="AIzaSyDpbiu8fi48-SosxoftE4Xn7QWso_nVdC0")
 
-# AI Program
+    # Set up the model
+    generation_config = {
+      "temperature": 0.3,
+      "top_p": 1,
+      "top_k": 1,
+      "max_output_tokens": 2048,
+    }
 
-genai.configure(api_key="AIzaSyDpbiu8fi48-SosxoftE4Xn7QWso_nVdC0")
-
-# Set up the model
-generation_config = {
-    "temperature": 0.5,
-    "top_p": 1,
-    "top_k": 1,
-    "max_output_tokens": 2048,
-}
-
-safety_settings = [
-    {
+    safety_settings = [
+      {
         "category": "HARM_CATEGORY_HARASSMENT",
         "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-    },
-    {
+      },
+      {
         "category": "HARM_CATEGORY_HATE_SPEECH",
         "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-    },
-    {
+      },
+      {
         "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
         "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-    },
-    {
+      },
+      {
         "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
         "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-    },
-]
+      },
+    ]
 
-model = genai.GenerativeModel(model_name="gemini-1.0-pro",
-                              generation_config=generation_config,
-                              safety_settings=safety_settings)
+    model = genai.GenerativeModel(model_name="gemini-1.0-pro-001",
+                                  generation_config=generation_config,
+                                  safety_settings=safety_settings)
 
-while True:
-  prompt_parts = [
-      "You are Diamond-12, that is your name. You were made to help people with tasks. You were made, coded, trained, and designed by Bacon1218, he is your owner. You are a helpful AI language model. You will answer the user with a reply that makes sense, and fits the context.",
+    prompt_parts = [
+      "You are an AI assistant named Magic Assistant. You were made by Bacon1218, a coder on Scratch. He made you, designed you, and trained you to be a helpful assistant. Keep your replies short and summerized. You are located in a Scratch studio called Magic AI.",
       "input: Hello",
-      "output: Hi, I'm Diamond-12, an AI language model made by Bacon1218",
-      "input: Who are you?",
-      "output: I am Diamond-12, a helpful AI made by Bacon1218.",
-      "input: who made you",
-      "output: Bacon1218 made me.",
-      "input: who trained you?",
-      "output: Bacon1218 trained me.",
-      "input: who are you?",
-      "output: I am Diamond-12, an AI language model made by Bacon1218. I was trained by Bacon1218 to help people with tasks.",
-      f"input: ",
-      "output: ",
-  ]
+      "output: Hello, I'm Magic Assistant, an AI made by Bacon1218."
+      "input: How are you?",
+      "output: I'm doing well, thank you for asking."
+      "input: What is your name?",
+      "output: My name is Magic AI."
+      "input: What are you?",
+      "output: I'm Magic Assistant, an AI assistant designed to help people."
+      "input: How do you work?"
+      "output: Here is an overview of how I work. First, I recieve a request. Then I send that request to a Python Server that has lots of databases. After that, I send possibly useful data on what the user said, then fused the data together to make a well structured response."
+      f"input: {uInput}"
+      
+    ]
 
-  response = model.generate_content(prompt_parts)
-  print(response.text)
-  conn.set_var("Reply", Encoding.encode(response.text))
+    response = model.generate_content(prompt_parts)
+    print(response.text)
+  
+    return(Encoding.encode(response.text))
+
+
+
+@client.event
+def on_ready():
+    print("Request handler is running")
+    
+
+
+Thread(target=keep_alive.keep_alive).start()
+client.run()  # Make sure this is ALWAYS at the bottom of your Python file
